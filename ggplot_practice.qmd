@@ -20,6 +20,7 @@ library(ggbeeswarm)
 
 library(gapminder)
 library(sf)
+library(paletteer)
 ```
 
 # date: data collection date
@@ -144,29 +145,145 @@ ggplot(data = lizards, aes(x = total_length, y = weight)) +
 #What if we want to get a count?
 
 
+#What if we want to make a grid where panels are split across groups by lizard sex and if it has a broken tail or not? 
+
+We have two variables being used to create our grid, well use facet_grid()
+
 ```{r}
-lizard_counts <- lizards %>% 
-count(common_name) +
-geom_col()
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point() +
+  facet_grid(sex ~ tail)
 ```
 
+# Getting things in order
+- GG plot likes to arder things alphabetically. But sometimes we want it thigns differently if we have categorically.
+
+- Lets find some total counts of lizards in the dataset by commin name, then make a column graph
+
+```{r}
+lizard_count <- lizards %>% 
+  count(common_name)
+
+ggplot(data = lizard_count, aes(y = fct_reorder(common_name, n), x = n)) +
+  geom_col()
+```
+
+
+## Advanced GG plot customizations
+
+
+```{r}
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point() + 
+  scale_x_continuous(breaks = c(0, 250, 500),
+                     limits = c(0, 500)) +
+  scale_y_continuous(breaks = seq(from = 0, 
+                                  to = 70,
+                                  by = 10),
+                     limits = c(0,70)) + 
+  labs( x = "Total Length", 
+        y = "Weight (grams)") +
+  theme_minimal()
+```
+
+```{r}
+#counting up the number of lizards per day
+lizard_counts <- lizards %>%
+  mutate(date = lubridate::mdy(date)) %>% 
+  count(date)
+```
 ```{r}
 ggplot(data = lizard_counts,
-aes(x = n, y = fct_reorder(common_name, n))) +
-geom_col()
-labs(x = "Individuals (n)",
-     y = "Species common name")
+       aes(x = date, y = n)) +
+  geom_line() +
+  scale_x_date(breaks = scales::breaks_width("2 Years"),
+               labels = scales::label_date("%Y"))
+```
 
+### Customization of aes with 'scale()'
+
+```{r}
+# color gradient with two colors
+ggplot(data = lizards,
+       aes(x = total_length,
+           y = weight)) +
+  geom_point(aes(color = weight)) +
+  scale_color_gradient(low = "red", high = "navy")
+
+#color gradient with more than 2 colors.......
+p2 <- ggplot(data = lizards,
+       aes(x = total_length,
+           y = weight)) +
+  geom_point(aes(color = weight)) +
+  #the function below is scalle_color_grandientn not the one above
+  scale_color_gradientn(colors = c("orange", "red", "purple", "navy", "black"))
+
+
+# now create a gradient of color bins
+
+```
+```{r}
+p1 <- ggplot(data = lizards,
+       aes(x = total_length, y = weight)) +
+  geom_point(aes(color = weight)) +
+  scale_color_steps(low = "red", high = "blue",
+                    breaks = seq(0, 80, by = 5))
 ```
 
 
 
-#What if we want to make a grid where panels are split across group by lizard sex and if it has a broken tail or not? 
+```{r}
+ggplot(data = lizards,
+       aes(x = common_name, y = total_length)) +
+  geom_boxplot(aes(fill = common_name),
+              show.legend = FALSE) +
+  coord_flip()
 
-We have two variables being used 
 
 
+```
+```{r}
+#find the median values
+```
 
+
+```{r}
+#ordering the species based on median length
+lizards_mean <- lizards %>%
+  mutate(common_name = fct_reorder(common_name, 
+                                   total_length,
+                                   .fun = median))
+
+p1 <- ggplot(data = lizards_mean,
+       aes(y = common_name, x = total_length)) +
+  geom_boxplot(aes(fill = common_name), show_legend = FALSE) +
+  scale_fill_paletteer_d("MoMAColors::Abott") +
+  labs(x = "Total Length (mm)", 
+       y = "Species") +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank())
+  
+```
+
+#Working with patchwork
+
+```{r}
+#vertical bar plots next to each other
+library(patchwork)
+
+(p1 | p2) & theme_minimal()
+
+#the / will put them on top of each other
+# so for example
+
+(p1/p2/p1/p2) & theme_minimal()
+
+#combinations of next to and on top
+
+p3 <- ((p1 | p2)/ p2) & theme_minimal()
+
+ggsave("test.png", p3)
+```
 
 
 
