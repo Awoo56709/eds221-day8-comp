@@ -1,0 +1,180 @@
+---
+title: "eds221_day8_interactive_session"
+format: html
+editor: visual
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r}
+library(tidyverse)
+library(here)
+library(janitor)
+
+library(patchwork)
+library(ggrepel)
+library(gghighlight)
+library(paletteer)
+library(ggExtra)
+library(ggbeeswarm)
+
+library(gapminder)
+library(sf)
+```
+
+# date: data collection date
+# scientific name: scientific name of lizards
+# common name: common name
+# site: research site code
+# sex: sex of lizards
+# sv_length: snout-vent length in mm
+# total_length: length in mm
+# toe_num: toee mark number
+#tail: tail condition 
+
+
+```{r}
+lizards <-  read_csv(here("data_tidy", "lizards.csv"))
+```
+```{r}
+#example of a good graph that is easy to read
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point()
+```
+
+```{r}
+#exampel of a bad one
+ggplot(data = lizards, aes(x = total_length, y = weight)) + geom_line()
+```
+```{r}
+ggplot(data = lizards, aes(x = total_length)) +
+  geom_histogram()
+```
+
+```{r}
+#jitter plots use one categorical and one continuous numerical
+ggplot(data = lizards, aes(y = common_name, x = weight)) + geom_jitter()
+```
+## Aesthetic mapping
+
+# fill: updates fill colors (columns, density, violin and boxplot interior color)
+# color: updates point & border line colors
+#shape: update point style
+# alpha: updates transparency
+# size: point size or line width
+# linetype: update the line by referring to a constant value THIS SHOULD NOT BE WITHIN THE aes()
+
+
+#creating nightmare graphs
+
+
+
+```{r}
+ggplot(data = lizards, aes(x = weight)) +        geom_histogram(color = "purple",
+                                                                          fill = "orange",
+                                                                          size = 2,
+                                                                          linetype = "dotted"
+)
+```
+```{r}
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(color = "cyan4", 
+             fill = "yellow",
+             shape = 22,
+             alpha = .6)
+```
+
+#Updating an aes based on a variable Yes aes()
+
+```{r}
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(aes(color = common_name, size = total_length))
+```
+
+#the above graph can be a good combination however the points are quite big. So we can minimize them.
+
+```{r}
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(aes(color = common_name), alpha = .3)
+```
+
+## Themes
+
+# Themes are built in themes, we just use + theme_*()
+
+the main ones are:
+- theme_minimal()
+- theme_bw()
+- theme_light()
+
+```{r}
+ggplot(data = lizards, aes(x = site, y = weight)) +
+  geom_jitter(aes(color = common_name)) +
+  theme_minimal()
+```
+
+# Axis labels
+
+using basics
+
+```{r}
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(aes(color = common_name)) +
+  labs(x = "Lizard Length (mm)", y = "Lizard Weight")
+```
+
+# Facetting
+
+sometimes its useful to split up info in graph into separate graphs. Example..... to separate graph for total length vs weight for EACH LIZARD SPECIES.
+
+Manually is tedious but we can using the faceting functions
+
+- facet_wrap()
+- facet_grid()
+
+
+```{r}
+#if we want a species to have its own panel, we use facet wrap()
+
+
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point() +
+  facet_wrap(~common_name, ncol = 3, scales = "free")
+```
+#What if we want to get a count?
+
+
+```{r}
+lizard_counts <- lizards %>% 
+count(common_name) +
+geom_col()
+```
+
+```{r}
+ggplot(data = lizard_counts,
+aes(x = n, y = fct_reorder(common_name, n))) +
+geom_col()
+labs(x = "Individuals (n)",
+     y = "Species common name")
+
+```
+
+
+
+#What if we want to make a grid where panels are split across group by lizard sex and if it has a broken tail or not? 
+
+We have two variables being used 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
